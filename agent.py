@@ -100,22 +100,9 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
             "timestamp": data.get("timestamp")
         }
     
-    # Validate that the timeframe is specifically "4H"
-    # This strategy is designed exclusively for 4-hour charts
-    if data["timeframe"] != "4H":
-        return {
-            "status": "no_trade",
-            "reason": "preconditions_not_met",
-            "entry": None,
-            "stop_loss": None,
-            "take_profit": None,
-            "rrr": None,
-            "confidence": 0,
-            "message": f"Invalid timeframe '{data['timeframe']}'. Strategy requires '4H' timeframe.",
-            "instrument": data.get("instrument"),
-            "timeframe": data.get("timeframe"),
-            "timestamp": data.get("timestamp")
-        }
+    # Timeframe validation removed - strategy now works with any timeframe
+    # Accepts: 1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W, etc.
+    # The strategy adapts to whatever timeframe is provided
     
     # All validation checks passed - data is valid and ready for analysis
     
