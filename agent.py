@@ -275,15 +275,87 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
     # This ensures high-probability setups with multiple confirmations
     
     if confluence_count < 3:
+        # Build detailed explanation of failed confluences
+        failed_confluences = []
+        
+        # Check which confluences failed and explain why
+        if not rsi_confluence_met:
+            if trend == "bullish":
+                if strict_mode:
+                    failed_confluences.append(f"RSI 4H not extremely oversold ({rsi_4h:.2f} > 5)")
+                else:
+                    failed_confluences.append(f"RSI 4H not oversold ({rsi_4h:.2f} > 20)")
+            elif trend == "bearish":
+                if strict_mode:
+                    failed_confluences.append(f"RSI 4H not extremely overbought ({rsi_4h:.2f} < 95)")
+                else:
+                    failed_confluences.append(f"RSI 4H not overbought ({rsi_4h:.2f} < 80)")
+        
+        if not candle_confluence_met:
+            if candle_type:
+                failed_confluences.append(f"Candle pattern '{candle_type}' does not support {trend} trend")
+            else:
+                failed_confluences.append("No bullish/bearish candle confirmation provided")
+        
+        if not pattern_confluence_met:
+            if pattern and not divergence:
+                failed_confluences.append(f"Pattern '{pattern}' does not align with {trend} trend")
+            elif divergence and not pattern:
+                failed_confluences.append("Divergence alone insufficient without supporting pattern")
+            else:
+                failed_confluences.append("No chart pattern or divergence detected")
+        
+        if not trend_confluence_met:
+            if trend == "bullish":
+                failed_confluences.append(f"Daily RSI too high ({rsi_daily:.2f} >= 70), potential trend exhaustion")
+            elif trend == "bearish":
+                failed_confluences.append(f"Daily RSI too low ({rsi_daily:.2f} <= 30), potential trend exhaustion")
+        
+        # Build human-readable message
+        met_description = '; '.join(confluence_details) if confluence_details else 'None'
+        failed_description = '; '.join(failed_confluences)
+        
+        # Check for conflicting signals
+        conflicting_signals = []
+        if pattern and candle_type:
+            bullish_patterns = ["double_bottom", "inverse_head_shoulders", "ascending_triangle", 
+                               "bullish_flag", "cup_and_handle"]
+            bearish_patterns = ["double_top", "head_shoulders", "descending_triangle", 
+                               "bearish_flag", "rising_wedge"]
+            bullish_candles = ["hammer", "bullish_engulfing", "morning_star", "bullish_pin_bar"]
+            bearish_candles = ["shooting_star", "bearish_engulfing", "evening_star", "bearish_pin_bar"]
+            
+            pattern_is_bullish = pattern.lower() in bullish_patterns
+            pattern_is_bearish = pattern.lower() in bearish_patterns
+            candle_is_bullish = candle_type.lower() in bullish_candles
+            candle_is_bearish = candle_type.lower() in bearish_candles
+            
+            if (pattern_is_bullish and candle_is_bearish) or (pattern_is_bearish and candle_is_bullish):
+                conflicting_signals.append(f"Pattern '{pattern}' conflicts with candle '{candle_type}'")
+        
+        # Determine reason code
+        reason_code = "conflicting_signals" if conflicting_signals else "not_enough_confluences"
+        
+        # Construct final message
+        if conflicting_signals:
+            conflict_msg = ' '.join(conflicting_signals)
+            message = f"Conflicting signals detected: {conflict_msg}. Only {confluence_count}/4 confluences met. Met: {met_description}. Failed: {failed_description}"
+        else:
+            message = f"Only {confluence_count}/4 confluences met. Need at least 3. Met: {met_description}. Failed: {failed_description}"
+        
+        # Calculate deterministic confidence based on confluence count
+        confidence_map = {0: 0, 1: 25, 2: 50}
+        calculated_confidence = confidence_map.get(confluence_count, 0)
+        
         return {
             "status": "no_trade",
-            "reason": "not_enough_confluences",
+            "reason": reason_code,
             "entry": None,
             "stop_loss": None,
             "take_profit": None,
             "rrr": None,
-            "confidence": 0,
-            "message": f"Only {confluence_count}/4 confluences met. Need at least 3. Met: {'; '.join(confluence_details) if confluence_details else 'None'}",
+            "confidence": calculated_confidence,
+            "message": message,
             "instrument": data.get("instrument"),
             "timeframe": data.get("timeframe"),
             "timestamp": data.get("timestamp")
@@ -410,9 +482,15 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
     # COMPONENT 1: CONFLUENCES (25% weight)
     # -------------------------------------------------------------------------
     # Score based on number of confluences met (out of 4 possible)
-    # 3/4 confluences = 18.75%, 4/4 confluences = 25%
+    # Deterministic mapping: 3/4 = 75%, 4/4 = 90-95%
     
-    confluence_percentage = (confluence_count / 4) * 25
+    if confluence_count == 3:
+        confluence_percentage = 18.75  # 3/4 = 75% of 25% weight
+    elif confluence_count == 4:
+        confluence_percentage = 23.75  # 4/4 = 95% of 25% weight (slightly below max)
+    else:
+        confluence_percentage = (confluence_count / 4) * 25  # Fallback (shouldn't reach here)
+    
     confidence_score += confluence_percentage
     
     # -------------------------------------------------------------------------
@@ -528,6 +606,10 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
         }
     
     # Confidence threshold met - proceed to final decision
+    
+    # Cap maximum confidence at 95% unless in strict mode with perfect conditions
+    if confidence_score > 95 and not (strict_mode and confluence_count == 4):
+        confidence_score = 95
     
     
     # ============================================================================
