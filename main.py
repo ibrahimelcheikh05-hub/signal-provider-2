@@ -66,7 +66,7 @@ class MarketDataRequest(BaseModel):
     """
     # Required fields
     instrument: str = Field(..., description="Trading instrument symbol (e.g., EURUSD, BTCUSD)")
-    timeframe: str = Field(..., description="Chart timeframe (must be '4H')")
+    timeframe: str = Field(..., description="Chart timeframe (e.g., 1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W)")
     timestamp: str = Field(..., description="Timestamp of the market data")
     close: float = Field(..., description="Current closing price")
     high: float = Field(..., description="Current/recent high price")
