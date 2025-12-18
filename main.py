@@ -71,10 +71,10 @@ class MarketDataRequest(BaseModel):
     close: float = Field(..., description="Current closing price")
     high: float = Field(..., description="Current/recent high price")
     low: float = Field(..., description="Current/recent low price")
-    rsi_4h: float = Field(..., description="RSI indicator on 4H timeframe")
-    rsi_daily: float = Field(..., description="RSI indicator on daily timeframe")
-    atr: float = Field(..., description="Average True Range for volatility measurement")
-    ema50_daily: float = Field(..., description="50-period EMA on daily timeframe")
+    RSI_4H: float = Field(..., description="RSI indicator on 4H timeframe")
+    RSI_DAILY: float = Field(..., description="RSI indicator on daily timeframe")
+    ATR: float = Field(..., description="Average True Range for volatility measurement")
+    EMA50_daily: float = Field(..., description="50-period EMA on daily timeframe")
     
     # Optional fields
     candle_type: Optional[str] = Field(None, description="Candlestick pattern type (e.g., hammer, shooting_star)")
