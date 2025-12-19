@@ -18,15 +18,15 @@ Example curl request:
          -H "Content-Type: application/json" \
          -d '{
            "instrument": "EURUSD",
-           "timeframe": "4H",
+           "timeframe": "1H",
            "timestamp": "2024-01-15T10:00:00Z",
            "close": 1.0850,
            "high": 1.0865,
            "low": 1.0835,
-           "rsi_4h": 18.5,
-           "rsi_daily": 45.2,
-           "atr": 0.0025,
-           "ema50_daily": 1.0800,
+           "RSI": 18.5,
+           "RSI_DAILY": 45.2,
+           "ATR": 0.0025,
+           "EMA50_daily": 1.0800,
            "candle_type": "hammer",
            "pattern": "double_bottom",
            "divergence": true,
@@ -71,7 +71,7 @@ class MarketDataRequest(BaseModel):
     close: float = Field(..., description="Current closing price")
     high: float = Field(..., description="Current/recent high price")
     low: float = Field(..., description="Current/recent low price")
-    RSI_4H: float = Field(..., description="RSI indicator on 4H timeframe")
+    RSI: float = Field(..., description="RSI indicator on the current timeframe")
     RSI_DAILY: float = Field(..., description="RSI indicator on daily timeframe")
     ATR: float = Field(..., description="Average True Range for volatility measurement")
     EMA50_daily: float = Field(..., description="50-period EMA on daily timeframe")
@@ -88,15 +88,15 @@ class MarketDataRequest(BaseModel):
         json_schema_extra = {
             "example": {
                 "instrument": "EURUSD",
-                "timeframe": "4H",
+                "timeframe": "1H",
                 "timestamp": "2024-01-15T10:00:00Z",
                 "close": 1.0850,
                 "high": 1.0865,
                 "low": 1.0835,
-                "rsi_4h": 18.5,
-                "rsi_daily": 45.2,
-                "atr": 0.0025,
-                "ema50_daily": 1.0800,
+                "RSI": 18.5,
+                "RSI_DAILY": 45.2,
+                "ATR": 0.0025,
+                "EMA50_daily": 1.0800,
                 "candle_type": "hammer",
                 "pattern": "double_bottom",
                 "divergence": True,
