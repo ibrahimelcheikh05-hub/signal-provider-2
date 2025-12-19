@@ -46,11 +46,11 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
     # Define all required fields for signal evaluation
     required_fields = [
         "instrument",      # Trading symbol (e.g., "EURUSD", "BTCUSD")
-        "timeframe",       # Chart timeframe (must be "4H")
+        "timeframe",       # Chart timeframe (any timeframe accepted)
         "close",           # Current closing price
         "high",            # Current/recent high price
         "low",             # Current/recent low price
-        "RSI_4H",          # RSI indicator on 4H timeframe
+        "RSI",             # RSI indicator on current timeframe
         "RSI_DAILY",       # RSI indicator on daily timeframe
         "ATR",             # Average True Range for volatility
         "EMA50_daily"      # 50-period EMA on daily timeframe
@@ -151,34 +151,34 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
     # Check for RSI at extreme oversold/overbought levels
     # These extreme levels suggest potential reversal points
     
-    rsi_4h = data["RSI_4H"]
+    rsi = data["RSI"]
     rsi_confluence_met = False
     
     if trend == "bullish":
         # For long entries: look for oversold conditions
         if strict_mode:
             # Strict mode: RSI must be extremely oversold (<=5)
-            if rsi_4h <= 5:
+            if rsi <= 5:
                 rsi_confluence_met = True
-                confluence_details.append(f"RSI 4H extremely oversold: {rsi_4h:.2f}")
+                confluence_details.append(f"RSI extremely oversold: {rsi:.2f}")
         else:
             # Normal mode: RSI oversold (<=20)
-            if rsi_4h <= 20:
+            if rsi <= 20:
                 rsi_confluence_met = True
-                confluence_details.append(f"RSI 4H oversold: {rsi_4h:.2f}")
+                confluence_details.append(f"RSI oversold: {rsi:.2f}")
     
     elif trend == "bearish":
         # For short entries: look for overbought conditions
         if strict_mode:
             # Strict mode: RSI must be extremely overbought (>=95)
-            if rsi_4h >= 95:
+            if rsi >= 95:
                 rsi_confluence_met = True
-                confluence_details.append(f"RSI 4H extremely overbought: {rsi_4h:.2f}")
+                confluence_details.append(f"RSI extremely overbought: {rsi:.2f}")
         else:
             # Normal mode: RSI overbought (>=80)
-            if rsi_4h >= 80:
+            if rsi >= 80:
                 rsi_confluence_met = True
-                confluence_details.append(f"RSI 4H overbought: {rsi_4h:.2f}")
+                confluence_details.append(f"RSI overbought: {rsi:.2f}")
     
     if rsi_confluence_met:
         confluence_count += 1
@@ -282,14 +282,14 @@ def evaluate_signal(data: Dict[str, Any]) -> Dict[str, Any]:
         if not rsi_confluence_met:
             if trend == "bullish":
                 if strict_mode:
-                    failed_confluences.append(f"RSI 4H not extremely oversold ({rsi_4h:.2f} > 5)")
+                    failed_confluences.append(f"RSI not extremely oversold ({rsi:.2f} > 5)")
                 else:
-                    failed_confluences.append(f"RSI 4H not oversold ({rsi_4h:.2f} > 20)")
+                    failed_confluences.append(f"RSI not oversold ({rsi:.2f} > 20)")
             elif trend == "bearish":
                 if strict_mode:
-                    failed_confluences.append(f"RSI 4H not extremely overbought ({rsi_4h:.2f} < 95)")
+                    failed_confluences.append(f"RSI not extremely overbought ({rsi:.2f} < 95)")
                 else:
-                    failed_confluences.append(f"RSI 4H not overbought ({rsi_4h:.2f} < 80)")
+                    failed_confluences.append(f"RSI not overbought ({rsi:.2f} < 80)")
         
         if not candle_confluence_met:
             if candle_type:
